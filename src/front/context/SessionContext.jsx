@@ -6,16 +6,19 @@ const SessionProvider = ({ children }) => {
   const [store, setStore] = useState({
     token: null,
     user: null,
+    userId: null,
   });
 
   useEffect(() => {
     const savedToken = sessionStorage.getItem("token");
     const savedUser = sessionStorage.getItem("user");
+    const savedUserId = sessionStorage.getItem("user_id");
 
-    if (savedToken) {
+    if (savedToken && savedUser) {
       setStore({
         token: savedToken,
-        user: savedUser ? JSON.parse(savedUser) : null,
+        user: JSON.parse(savedUser),
+        userId: parseInt(savedUserId),
       });
     }
   }, []);
@@ -23,13 +26,13 @@ const SessionProvider = ({ children }) => {
   const login = (token, userData) => {
     sessionStorage.setItem("token", token);
     sessionStorage.setItem("user", JSON.stringify(userData));
-    setStore({ token, user: userData });
+    sessionStorage.setItem("user_id", userData.id);
+    setStore({ token, user: userData, userId: userData.id });
   };
 
   const logout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-    setStore({ token: null, user: null });
+    sessionStorage.clear();
+    setStore({ token: null, user: null, userId: null });
   };
 
   const actions = { login, logout };

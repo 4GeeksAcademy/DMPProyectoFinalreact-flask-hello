@@ -3,7 +3,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
-
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(120), nullable=False)
@@ -28,8 +27,11 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(120), nullable=False)
     grupo = db.Column(db.String(120), nullable=False)
-    anio = db.Column(db.Integer)
-    soporte = db.Column(db.String(50))  # vinilo, disco, virtual
+    anio = db.Column(db.Integer, nullable=False)
+    soporte = db.Column(db.String(20), nullable=False)
+    precio = db.Column(db.Float, nullable=False)
+    imagen_url = db.Column(db.String, default="https://via.placeholder.com/300")
+    descripcion = db.Column(db.Text, default="")  # NUEVO CAMPO
 
     def serialize(self):
         return {
@@ -37,15 +39,17 @@ class Product(db.Model):
             "nombre": self.nombre,
             "grupo": self.grupo,
             "anio": self.anio,
-            "soporte": self.soporte
+            "soporte": self.soporte,
+            "precio": self.precio,
+            "imagen_url": self.imagen_url,
+            "descripcion": self.descripcion  # AÑADIDO
         }
 
 
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey(
-        "product.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
 
     user = db.relationship("User", backref="cart_items")
     product = db.relationship("Product")
@@ -61,8 +65,7 @@ class CartItem(db.Model):
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey(
-        "product.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
 
     user = db.relationship("User", backref="favorites")
     product = db.relationship("Product")

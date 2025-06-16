@@ -1,23 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { SessionContext } from "../context/SessionContext.jsx";
 
-
-const mockUserId = 1;
-const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api";
+const API = "https://vigilant-pancake-jj4px5j4g9gwhpjgq-3001.app.github.dev/api";
 
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
+  const { store: session, actions } = useContext(SessionContext);
+ const token = session.store?.token;
+
+
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [favorites, setFavorites] = useState([]);
 
   const loadMessage = async () => {
     try {
-      if (!API) throw new Error("VITE_BACKEND_URL is not defined in .env file");
-      const response = await fetch(API + "/hello");
-      const data = await response.json();
-      if (response.ok) dispatch({ type: "set_hello", payload: data.message });
+      const res = await fetch(`${API}/hello`);
+      const data = await res.json();
+      if (res.ok) dispatch({ type: "set_hello", payload: data.message });
     } catch (error) {
       console.error("Mensaje de error:", error.message);
     }
@@ -34,8 +35,11 @@ export const Home = () => {
   };
 
   const loadCart = async () => {
+    if (!token) return;
     try {
-      const res = await fetch(`${API}/cart?user_id=${mockUserId}`);
+      const res = await fetch(`${API}/cart`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setCart(data);
     } catch (err) {
@@ -44,8 +48,11 @@ export const Home = () => {
   };
 
   const loadFavorites = async () => {
+    if (!token) return;
     try {
-      const res = await fetch(`${API}/favorites?user_id=${mockUserId}`);
+      const res = await fetch(`${API}/favorites`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setFavorites(data);
     } catch (err) {
@@ -54,18 +61,26 @@ export const Home = () => {
   };
 
   const addToCart = (productId) => {
+    if (!token) return;
     fetch(`${API}/cart`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: mockUserId, product_id: productId })
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ product_id: productId }),
     }).then(() => loadCart());
   };
 
   const addToFavorites = (productId) => {
+    if (!token) return;
     fetch(`${API}/favorites`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: mockUserId, product_id: productId })
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ product_id: productId }),
     }).then(() => loadFavorites());
   };
 
@@ -74,66 +89,81 @@ export const Home = () => {
     loadProducts();
     loadCart();
     loadFavorites();
-  }, []);
+  }, [token]);
+
+  const totalCarrito = cart.reduce((acc, item) => acc + (item.product.precio || 0), 0);
 
   return (
-    <div className="p-6">
-      <div className="mb-6 p-4 bg-purple-100 text-purple-800 rounded shadow">
-        {store.message ? (
-          <span>{store.message}</span>
-        ) : (
-          <span className="text-purple-500">
-            Cargando mensaje del backend...
-          </span>
-        )}
-      </div>
-
-      <h2 className="text-xl font-bold text-purple-700 mb-4">🎵 Productos disponibles</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+    <div className="container py-4">
+      <h2 className="text-primary mb-4">🎵 Productos disponibles</h2>
+      <div className="row">
         {products.map((product) => (
-          <div key={product.id} className="bg-white p-4 rounded shadow border border-purple-200">
-            <h2 className="text-lg font-semibold text-purple-800">{product.nombre}</h2>
-            <p className="text-purple-600">{product.grupo} ({product.anio})</p>
-            <p className="italic text-purple-500">Formato: {product.soporte}</p>
-            <div className="mt-2 space-x-2">
-              <button
-                onClick={() => addToCart(product.id)}
-                className="bg-purple-500 text-white px-2 py-1 rounded"
-              >🛒 Añadir</button>
-              <button
-                onClick={() => addToFavorites(product.id)}
-                className="bg-purple-300 text-white px-2 py-1 rounded"
-              >❤️ Favorito</button>
+          <div key={product.id} className="col-md-4 mb-4">
+            <div className="card h-100">
+              <img
+                src={product.imagen_url}
+                className="card-img-top"
+                alt={product.nombre}
+                style={{ height: "200px", objectFit: "cover" }}
+              />
+              <div className="card-body">
+                <h5 className="card-title text-primary">{product.nombre}</h5>
+                <h6 className="card-subtitle mb-2 text-muted">
+                  {product.grupo} ({product.anio})
+                </h6>
+                <p className="card-text">
+                  <strong>Formato:</strong> {product.soporte}<br />
+                  <strong>💶 Precio:</strong> {product.precio} €<br />
+                  <em>{product.descripcion}</em>
+                </p>
+              </div>
+              {token && (
+                <div className="card-footer bg-transparent d-flex justify-content-between">
+                  <button className="btn btn-success btn-sm" onClick={() => addToCart(product.id)}>🛒 Añadir</button>
+                  <button className="btn btn-outline-danger btn-sm" onClick={() => addToFavorites(product.id)}>❤️ Favorito</button>
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mb-10">
-        <h2 className="text-xl font-bold text-purple-700 mb-2">🛒 Carrito</h2>
-        {cart.length === 0 ? (
-          <p className="text-purple-500">Tu carrito está vacío.</p>
-        ) : (
-          <ul className="list-disc list-inside">
-            {cart.map((item) => (
-              <li key={item.id}>{item.nombre} - {item.grupo}</li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {token && (
+        <>
+          <h2 className="text-primary mt-5">🛒 Carrito</h2>
+          {cart.length === 0 ? (
+            <p className="text-muted">Tu carrito está vacío.</p>
+          ) : (
+            <>
+              <ul className="list-group mb-2">
+                {cart.map((item) => (
+                  <li key={item.id} className="list-group-item d-flex justify-content-between">
+                    {item.product.nombre} - {item.product.grupo}
+                    <span>💶 {item.product.precio} €</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="fw-bold text-success">🧾 Total: {totalCarrito} €</p>
+            </>
+          )}
 
-      <div>
-        <h2 className="text-xl font-bold text-purple-700 mb-2">❤️ Favoritos</h2>
-        {favorites.length === 0 ? (
-          <p className="text-purple-500">Aún no tienes favoritos.</p>
-        ) : (
-          <ul className="list-disc list-inside">
-            {favorites.map((item) => (
-              <li key={item.id}>{item.nombre} - {item.grupo}</li>
-            ))}
-          </ul>
-        )}
-      </div>
+          <h2 className="text-primary mt-5">❤️ Favoritos</h2>
+          {favorites.length === 0 ? (
+            <p className="text-muted">Aún no tienes favoritos.</p>
+          ) : (
+            <ul className="list-group">
+              {favorites.map((item) => (
+                <li key={item.id} className="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{item.product.nombre}</strong> - {item.product.grupo}
+                  </div>
+                  <span>💶 {item.product.precio} €</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
     </div>
   );
 };

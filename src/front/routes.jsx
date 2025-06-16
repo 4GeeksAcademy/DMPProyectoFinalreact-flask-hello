@@ -9,6 +9,11 @@ import Layout from "./pages/Layout.jsx";
 import { Home } from "./pages/Home";
 import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
+import { CartPage } from "./pages/CartPage";
+import FavoritesPage from "./pages/FavoritesPage.jsx";
+
+
+
 
 
 
@@ -27,7 +32,8 @@ export const router = createBrowserRouter(
 
       {/* Nested Routes: Defines sub-routes within the BaseHome component. */}
       <Route index element={<Home />} />
-
+      <Route path="/cart" element={<CartPage />} />
+      <Route path="/favorites" element={<FavoritesPage />} />
       <Route path="/single/:theId" element={<Single />} />  {/* Dynamic route for single items */}
       <Route path="login" element={<Demo />} />
     </Route>

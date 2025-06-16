@@ -5,7 +5,9 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 const mockUserId = 1; // Simulamos un usuario logueado
-const API = "http://localhost:5000/api";
+const API = (import.meta.env.VITE_BACKEND_URL || "http://localhost:3001") + "/api";
+app.run(host="0.0.0.0", port=3001, debug=True)
+
 
 function App() {
   return (
@@ -16,7 +18,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
-          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Router>

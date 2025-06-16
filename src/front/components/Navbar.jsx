@@ -12,24 +12,18 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-purple-100 shadow-md p-4 flex justify-between items-center">
-      <h1 className="text-2xl font-bold text-purple-800">🎵 Rythm & Blues</h1>
-      <div className="space-x-4">
-        <Link to="/" className="text-purple-700 hover:underline">Inicio</Link>
-        <Link to="/cart" className="text-purple-700 hover:underline">Carrito</Link>
-        <Link to="/favorites" className="text-purple-700 hover:underline">Favoritos</Link>
+    <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm px-4">
+      <span className="navbar-brand fw-bold text-purple">🎵 Rythm & Blues</span>
+      <div className="ms-auto d-flex gap-3">
+        <Link to="/" className="nav-link text-secondary">Inicio</Link>
+        <Link to="/cart" className="nav-link text-secondary">Carrito</Link>
+        <Link to="/favorites" className="nav-link text-secondary">Favoritos</Link>
         {store.token ? (
-          <button
-            onClick={handleLogout}
-            className="text-purple-700 hover:underline"
-          >
+          <button className="btn btn-outline-danger btn-sm" onClick={handleLogout}>
             Cerrar sesión
           </button>
         ) : (
-          <button
-            onClick={() => navigate("/login")}
-            className="text-purple-700 hover:underline"
-          >
+          <button className="btn btn-outline-primary btn-sm" onClick={() => navigate("/login")}>
             Iniciar sesión / Crear cuenta
           </button>
         )}
