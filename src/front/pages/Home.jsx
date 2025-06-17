@@ -6,9 +6,9 @@ const API = "https://vigilant-pancake-jj4px5j4g9gwhpjgq-3001.app.github.dev/api"
 
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
-  const { store: session, actions } = useContext(SessionContext);
- const token = session.store?.token;
-
+  const { store: session } = useContext(SessionContext);
+  const user = session.user;
+  const token = session.token;
 
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
@@ -38,9 +38,10 @@ export const Home = () => {
     if (!token) return;
     try {
       const res = await fetch(`${API}/cart`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
+      console.log("Carrito cargado:", data);
       setCart(data);
     } catch (err) {
       console.error("Error cargando carrito:", err);
@@ -51,37 +52,58 @@ export const Home = () => {
     if (!token) return;
     try {
       const res = await fetch(`${API}/favorites`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
+      console.log("Favoritos cargados:", data);
       setFavorites(data);
     } catch (err) {
       console.error("Error cargando favoritos:", err);
     }
   };
 
-  const addToCart = (productId) => {
+  const addToCart = async (productId) => {
     if (!token) return;
-    fetch(`${API}/cart`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ product_id: productId }),
-    }).then(() => loadCart());
+    try {
+      const res = await fetch(`${API}/cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ product_id: productId })
+      });
+      if (res.ok) {
+        await loadCart();
+      } else {
+        const err = await res.json();
+        console.error("Error al añadir al carrito:", err);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    }
   };
 
-  const addToFavorites = (productId) => {
+  const addToFavorites = async (productId) => {
     if (!token) return;
-    fetch(`${API}/favorites`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ product_id: productId }),
-    }).then(() => loadFavorites());
+    try {
+      const res = await fetch(`${API}/favorites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ product_id: productId })
+      });
+      if (res.ok) {
+        await loadFavorites();
+      } else {
+        const err = await res.json();
+        console.error("Error al añadir a favoritos:", err);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    }
   };
 
   useEffect(() => {
@@ -91,7 +113,9 @@ export const Home = () => {
     loadFavorites();
   }, [token]);
 
-  const totalCarrito = cart.reduce((acc, item) => acc + (item.product.precio || 0), 0);
+  const totalCarrito = Array.isArray(cart)
+    ? cart.reduce((acc, item) => acc + (item.product.precio || 0), 0)
+    : 0;
 
   return (
     <div className="container py-4">
@@ -113,8 +137,7 @@ export const Home = () => {
                 </h6>
                 <p className="card-text">
                   <strong>Formato:</strong> {product.soporte}<br />
-                  <strong>💶 Precio:</strong> {product.precio} €<br />
-                  <em>{product.descripcion}</em>
+                  <strong>💶 Precio:</strong> {product.precio} €
                 </p>
               </div>
               {token && (
@@ -131,9 +154,7 @@ export const Home = () => {
       {token && (
         <>
           <h2 className="text-primary mt-5">🛒 Carrito</h2>
-          {cart.length === 0 ? (
-            <p className="text-muted">Tu carrito está vacío.</p>
-          ) : (
+          {Array.isArray(cart) && cart.length > 0 ? (
             <>
               <ul className="list-group mb-2">
                 {cart.map((item) => (
@@ -145,12 +166,12 @@ export const Home = () => {
               </ul>
               <p className="fw-bold text-success">🧾 Total: {totalCarrito} €</p>
             </>
+          ) : (
+            <p className="text-muted">Tu carrito está vacío.</p>
           )}
 
           <h2 className="text-primary mt-5">❤️ Favoritos</h2>
-          {favorites.length === 0 ? (
-            <p className="text-muted">Aún no tienes favoritos.</p>
-          ) : (
+          {Array.isArray(favorites) && favorites.length > 0 ? (
             <ul className="list-group">
               {favorites.map((item) => (
                 <li key={item.id} className="list-group-item d-flex justify-content-between align-items-center">
@@ -161,6 +182,8 @@ export const Home = () => {
                 </li>
               ))}
             </ul>
+          ) : (
+            <p className="text-muted">Aún no tienes favoritos.</p>
           )}
         </>
       )}

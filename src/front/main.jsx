@@ -1,19 +1,16 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes.jsx";
-import SessionProvider from "./context/SessionContext.jsx";
 import { StoreProvider } from "./hooks/useGlobalReducer.jsx";
+import { SessionProvider } from "./context/SessionContext.jsx";
 import "./index.css";
-import 'bootstrap/dist/css/bootstrap.min.css';
 
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+const root = createRoot(document.getElementById("root"));
+root.render(
+  <StoreProvider>
     <SessionProvider>
-      <StoreProvider>
-        <RouterProvider router={router} />
-      </StoreProvider>
+      <RouterProvider router={router} />
     </SessionProvider>
-  </React.StrictMode>
+  </StoreProvider>
 );
