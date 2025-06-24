@@ -4,7 +4,8 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./routes.jsx";
 import { StoreProvider } from "./hooks/useGlobalReducer.jsx";
 import { SessionProvider } from "./context/SessionContext.jsx";
-import "./index.css";
+import "./index.css"; // o "./index.css" si lo pusiste allí
+
 
 const root = createRoot(document.getElementById("root"));
 root.render(

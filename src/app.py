@@ -1,10 +1,13 @@
 import os
+import stripe
+
 from flask import Flask, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
 from api.models import db, Product
 from api.routes import api as api_blueprint
 from flask_jwt_extended import JWTManager
+
 
 
 
@@ -23,6 +26,13 @@ jwt = JWTManager(app)
 # Inicializa SQLAlchemy y migraciones
 db.init_app(app)
 MIGRATE = Migrate(app, db)
+
+
+
+stripe.api_key = "TU_CLAVE_SECRETA_DE_STRIPE"  # comienza con "sk_test_..."
+
+
+
 
 # Registra el blueprint
 app.register_blueprint(api_blueprint, url_prefix="/api")
@@ -76,3 +86,4 @@ if __name__ == "__main__":
         db.create_all()
         precargar_productos()
     app.run(host="0.0.0.0", port=PORT, debug=True)
+

@@ -3,11 +3,10 @@
 
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import LoginForm from "./LoginForm"; // Asegúrate de que la ruta sea correcta
 
 const mockUserId = 1; // Simulamos un usuario logueado
 const API = (import.meta.env.VITE_BACKEND_URL || "http://localhost:3001") + "/api";
-app.run(host="0.0.0.0", port=3001, debug=True)
-
 
 function App() {
   return (
@@ -18,7 +17,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<LoginForm />} />
         </Routes>
       </div>
     </Router>
@@ -33,7 +32,7 @@ function Navbar() {
         <Link to="/" className="text-blue-600">Home</Link>
         <Link to="/cart" className="text-blue-600">Cart</Link>
         <Link to="/favorites" className="text-blue-600">Favorites</Link>
-        <Link to="/login" className="text-blue-600">Login</Link>
+        {!mockUserId && <Link to="/register" className="text-blue-600">Login</Link>}
       </div>
     </nav>
   );
@@ -43,7 +42,9 @@ function Home() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/products`).then(res => res.json()).then(data => setProducts(data));
+    fetch(`${API}/products`)
+      .then(res => res.json())
+      .then(data => setProducts(data));
   }, []);
 
   const addToCart = (productId) => {
@@ -79,6 +80,22 @@ function Home() {
   );
 }
 
+const deleteFavorite = async (productId) => {
+  try {
+    const res = await fetch(`${API}/favorites/${productId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionStorage.getItem("token")}`
+      }
+    });
+    if (!res.ok) throw new Error("No se pudo eliminar el favorito");
+    setFavorites(favorites.filter(item => item.id !== productId));
+  } catch (err) {
+    console.error("Error al eliminar favorito:", err);
+  }
+};
+
 function Cart() {
   const [items, setItems] = useState([]);
 
@@ -95,6 +112,7 @@ function Cart() {
 
   return (
     <div className="p-6">
+      <Link to="/" className="text-blue-600 underline mb-4 block">← Volver a la tienda</Link>
       <h2 className="text-2xl font-bold mb-4">🛒 Carrito</h2>
       {items.map(item => (
         <div key={item.id} className="bg-white p-4 mb-2 rounded shadow flex justify-between">
@@ -122,44 +140,14 @@ function Favorites() {
 
   return (
     <div className="p-6">
+      <Link to="/" className="text-blue-600 underline mb-4 block">← Volver a la tienda</Link>
       <h2 className="text-2xl font-bold mb-4">❤️ Favoritos</h2>
       {items.map(item => (
         <div key={item.id} className="bg-white p-4 mb-2 rounded shadow flex justify-between">
           <span>{item.nombre} - {item.grupo}</span>
-          <button onClick={() => removeFromFavorites(item.id)} className="text-red-600">Eliminar</button>
+          <button onClick={() => deleteFavorite(item.id)} className="text-red-600">Eliminar</button>
         </div>
       ))}
-    </div>
-  );
-}
-
-function LoginForm() {
-  const [form, setForm] = useState({ username: "", email: "" });
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    fetch(`${API}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    }).then(res => res.json()).then(data => {
-      console.log("Usuario creado:", data);
-      // puedes redirigir o guardar info en sessionStorage
-    });
-  };
-
-  return (
-    <div className="p-6 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">Registro de Usuario</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input type="text" name="username" value={form.username} onChange={handleChange} placeholder="Nombre de usuario" className="w-full p-2 border rounded" required />
-        <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Email" className="w-full p-2 border rounded" required />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Registrar</button>
-      </form>
     </div>
   );
 }

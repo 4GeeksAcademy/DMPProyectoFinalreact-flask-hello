@@ -1,76 +1,113 @@
 import React, { useEffect, useState, useContext } from "react";
 import { SessionContext } from "../context/SessionContext.jsx";
+import { useNavigate } from "react-router-dom";
 
-const API = import.meta.env.VITE_BACKEND_URL + "/api";
+
+const API = "https://vigilant-pancake-jj4px5j4g9gwhpjgq-3001.app.github.dev/api";
 
 export const CartPage = () => {
-  const { store: session } = useContext(SessionContext);
+  const { store } = useContext(SessionContext);
+  const token = store.token;
   const [cart, setCart] = useState([]);
-  const [error, setError] = useState(null);
 
-  const token = session.token;
+  const navigate = useNavigate();
 
   const loadCart = async () => {
-    if (!token) return;
-
     try {
       const res = await fetch(`${API}/cart`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error("No se pudo cargar el carrito");
       const data = await res.json();
-      setCart(data);
+      setCart(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message);
+      console.error("Error cargando carrito:", err);
     }
   };
 
-  const removeFromCart = async (itemId) => {
+  const removeFromCart = async (id) => {
     try {
-      const res = await fetch(`${API}/cart/${itemId}`, {
+      const res = await fetch(`${API}/cart/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
-        },
+          Authorization: `Bearer ${token}`
+        }
       });
-      if (!res.ok) throw new Error("No se pudo eliminar el producto");
-      await loadCart();
+      if (res.ok) {
+        loadCart();
+      } else {
+        const err = await res.json();
+        alert(err.error || "Error al eliminar del carrito");
+      }
     } catch (err) {
-      setError(err.message);
+      console.error("Error al eliminar del carrito:", err);
     }
   };
 
+
+
+const handlePayment = async () => {
+  try {
+    const res = await fetch(`${API}/create-checkout-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ items: cart }) // asegúrate que `cart` tiene la estructura esperada
+    });
+
+    if (!res.ok) throw new Error("Error en la solicitud");
+
+    const data = await res.json();
+    window.location.href = data.url;  // redirige al checkout de Stripe
+  } catch (err) {
+    console.error("Error iniciando pago:", err);
+    alert("No se pudo iniciar el proceso de pago");
+  }
+};
+
+
+
   useEffect(() => {
-    loadCart();
+    if (token) loadCart();
   }, [token]);
 
-  const total = cart.reduce((acc, item) => acc + (item.product.precio || 0), 0);
+  const total = cart.reduce((sum, item) => sum + (item.product.precio || 0), 0);
 
   return (
-    <div className="container mt-4">
-      <h2 className="text-primary">🛒 Mi carrito</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {cart.length === 0 ? (
-        <p className="text-muted">Tu carrito está vacío.</p>
-      ) : (
+
+    <div className="container mt-5">
+      <button className="btn btn-outline-secondary mb-3" onClick={() => navigate("/")}>
+        🔙 Volver a la tienda
+      </button>
+
+      <h2 className="text-primary mb-4">🛒 Tu Carrito</h2>
+      {cart.length > 0 ? (
         <>
-          <ul className="list-group">
+          <ul className="list-group mb-3">
             {cart.map((item) => (
               <li key={item.id} className="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                  <strong>{item.product.nombre}</strong> - {item.product.grupo} ({item.product.anio})<br />
-                  💶 {item.product.precio} €
+                  <strong>{item.product.nombre}</strong> - {item.product.grupo}
                 </div>
-                <button className="btn btn-sm btn-outline-danger" onClick={() => removeFromCart(item.id)}>
-                  🗑️ Eliminar
-                </button>
+                <div>
+                  <span className="me-3">💶 {item.product.precio} €</span>
+                  <button className="btn btn-sm btn-outline-danger" onClick={() => removeFromCart(item.id)}>
+                    Eliminar
+                  </button>
+
+
+                </div>
               </li>
             ))}
           </ul>
-          <p className="fw-bold mt-3 text-success">🧾 Total: {total} €</p>
+          <p className="fw-bold text-success">🧾 Total: {total} €</p>
+          <button className="btn btn-success" onClick={handlePayment}>
+            💳 Pagar con tarjeta
+          </button>
         </>
+      ) : (
+        <p className="text-muted">Tu carrito está vacío.</p>
       )}
     </div>
   );

@@ -30,6 +30,7 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Registro
       const res = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,8 +45,26 @@ const Register = () => {
         return;
       }
 
+      // Login automático
+      const loginRes = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+
+      const loginData = await loginRes.json();
+
+      if (!loginRes.ok) {
+        alert("Registrado correctamente, pero error al iniciar sesión");
+        setLoading(false);
+        return;
+      }
+
       // Guardar sesión
-      actions.login("fake-jwt-token", data);
+      actions.setUser(loginData.user);
+      actions.setToken(loginData.token);
+      sessionStorage.setItem("token", loginData.token);
+
       navigate("/");
     } catch (err) {
       console.error("Error en el registro:", err);
@@ -53,7 +72,6 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
-    
   };
 
   return (

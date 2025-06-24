@@ -8,9 +8,11 @@ import {
 import Layout from "./pages/Layout.jsx";
 import { Home } from "./pages/Home";
 import { Single } from "./pages/Single";
-import { Demo } from "./pages/Demo";
+import Demo from "./pages/Demo.jsx";
+import Register from "./pages/Register.jsx";
 import { CartPage } from "./pages/CartPage";
 import FavoritesPage from "./pages/FavoritesPage.jsx";
+
 
 
 
@@ -36,6 +38,7 @@ export const router = createBrowserRouter(
       <Route path="/favorites" element={<FavoritesPage />} />
       <Route path="/single/:theId" element={<Single />} />  {/* Dynamic route for single items */}
       <Route path="login" element={<Demo />} />
+      <Route path="/register" element={<Register />} />
     </Route>
   )
 );

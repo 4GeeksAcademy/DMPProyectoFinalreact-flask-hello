@@ -1,0 +1,61 @@
+:root {
+  --malva: #b889d6;
+  --malva-oscuro: #9b59b6;
+  --malva-claro: #e0c8f7;
+  --text-color: #ffffff;
+}
+
+/* Cambia navbar a tonos malva */
+.navbar {
+  background-color: var(--malva) !important;
+}
+
+.navbar .btn,
+.navbar .btn:hover {
+  background-color: var(--malva-oscuro);
+  color: var(--text-color);
+  border: none;
+}
+
+.navbar .dropdown-menu {
+  background-color: var(--malva-claro);
+}
+
+.dropdown-item:hover {
+  background-color: var(--malva);
+  color: white;
+}
+
+/* Botones principales */
+.btn-primary {
+  background-color: var(--malva-oscuro);
+  border-color: var(--malva-oscuro);
+}
+
+.btn-primary:hover {
+  background-color: #8e44ad;
+  border-color: #8e44ad;
+}
+
+.btn-outline-light {
+  color: white;
+  border-color: white;
+}
+
+.btn-outline-light:hover {
+  background-color: white;
+  color: var(--malva-oscuro);
+}
+
+/* Card malva */
+.card {
+  border: 1px solid var(--malva-oscuro);
+}
+
+.card .card-title {
+  color: var(--malva-oscuro);
+}
+
+.text-primary {
+  color: var(--malva-oscuro) !important;
+}

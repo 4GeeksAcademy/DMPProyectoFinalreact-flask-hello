@@ -1,157 +1,107 @@
 import React, { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { SessionContext } from "../context/SessionContext.jsx";
-import useGlobalReducer from "../hooks/useGlobalReducer";
 
-// Construye correctamente la URL del backend, evitando doble slash
-const buildUrl = (path) => {
-  const base = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, ""); // quita barra final si la hay
-  return `${base}${path}`;
-};
-
-export const Demo = () => {
-  const { store, dispatch } = useGlobalReducer();
-  const { actions } = useContext(SessionContext);
-  const navigate = useNavigate();
-
-  const [mostrarLogin, setMostrarLogin] = useState(true);
+const Demo = () => {
+  const { store, actions } = useContext(SessionContext);
   const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
-  const [error, setError] = useState(null);
-
-  const toggleModo = () => {
-    setMostrarLogin(!mostrarLogin);
-  };
-
-  const toggleForm = () => {
-    setIsLogin(!isLogin);
-    setForm({ username: "", email: "", password: "" });
-    setError(null);
-  };
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: ""
+  });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-
-    const endpoint = isLogin ? "/login" : "/register";
-    const payload = isLogin
-      ? { email: form.email, password: form.password }
-      : { username: form.username, email: form.email, password: form.password };
-
+  const handleLogin = async () => {
     try {
-      const res = await fetch(buildUrl(endpoint), {
+      await actions.login(formData.email, formData.password);
+      alert("Inicio de sesión exitoso");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      const res = await fetch("https://vigilant-pancake-jj4px5j4g9gwhpjgq-3001.app.github.dev/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData)
       });
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Registro fallido");
 
-      if (res.ok && data.token) {
-        actions.login(data.token, data.user);
-        navigate("/");
+      await actions.login(formData.email, formData.password);
+      alert("Registro exitoso");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("¿Seguro que quieres borrar tu cuenta?")) return;
+    try {
+      const res = await fetch("https://vigilant-pancake-jj4px5j4g9gwhpjgq-3001.app.github.dev/api/delete_account", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${store.token}`
+        }
+      });
+      if (res.ok) {
+        actions.logout();
+        alert("Cuenta eliminada");
       } else {
-        setError(data.error || "Error de autenticación");
+        const data = await res.json();
+        alert(data.error || "Error al borrar cuenta");
       }
     } catch (err) {
-      console.error("Error de red:", err);
-      setError("Error en la conexión con el servidor.");
+      alert("Error en la solicitud");
     }
   };
 
   return (
-    <div className="container">
-      <div className="mb-4">
-        <button onClick={toggleModo} className="btn btn-outline-secondary">
-          {mostrarLogin ? "Ver lista de tareas" : "Ir a Login / Registro"}
+    <div className="container mt-5">
+      <h2>{isLogin ? "Iniciar Sesión" : "Registrarse"}</h2>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          isLogin ? handleLogin() : handleRegister();
+        }}
+      >
+        {!isLogin && (
+          <div className="mb-3">
+            <label>Usuario:</label>
+            <input name="username" value={formData.username} onChange={handleChange} className="form-control" />
+          </div>
+        )}
+        <div className="mb-3">
+          <label>Email:</label>
+          <input name="email" type="email" value={formData.email} onChange={handleChange} className="form-control" />
+        </div>
+        <div className="mb-3">
+          <label>Contraseña:</label>
+          <input name="password" type="password" value={formData.password} onChange={handleChange} className="form-control" />
+        </div>
+        <button type="submit" className="btn btn-primary">
+          {isLogin ? "Iniciar Sesión" : "Registrarse"}
         </button>
-      </div>
+      </form>
 
-      {mostrarLogin ? (
-        <div className="max-w-md mx-auto p-4 bg-light rounded shadow">
-          <h2 className="text-center mb-4 text-primary">
-            {isLogin ? "Iniciar sesión" : "Crear cuenta"}
-          </h2>
-          <form onSubmit={handleSubmit}>
-            {!isLogin && (
-              <div className="mb-3">
-                <input
-                  type="text"
-                  name="username"
-                  value={form.username}
-                  onChange={handleChange}
-                  placeholder="Nombre de usuario"
-                  className="form-control"
-                  required
-                />
-              </div>
-            )}
-            <div className="mb-3">
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Correo electrónico"
-                className="form-control"
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Contraseña"
-                className="form-control"
-                required
-              />
-            </div>
-            {error && <p className="text-danger small">{error}</p>}
-            <button type="submit" className="btn btn-primary w-100">
-              {isLogin ? "Entrar" : "Registrarse"}
-            </button>
-          </form>
-          <button
-            onClick={toggleForm}
-            className="btn btn-link text-center d-block mt-3"
-          >
-            {isLogin
-              ? "¿No tienes cuenta? Regístrate aquí"
-              : "¿Ya tienes cuenta? Inicia sesión"}
+      <button onClick={() => setIsLogin(!isLogin)} className="btn btn-link mt-2">
+        {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+      </button>
+
+      {store.token && (
+        <div className="mt-4">
+          <button className="btn btn-danger" onClick={handleDelete}>
+            🗑️ Borrar mi cuenta
           </button>
         </div>
-      ) : (
-        <ul className="list-group">
-          {store?.todos?.map((item) => (
-            <li
-              key={item.id}
-              className="list-group-item d-flex justify-content-between"
-              style={{ background: item.background }}
-            >
-              <Link to={`/single/${item.id}`}>Link to: {item.title}</Link>
-              <button
-                className="btn btn-success"
-                onClick={() =>
-                  dispatch({ type: "add_task", payload: { id: item.id, color: "#ffa500" } })
-                }
-              >
-                Cambiar color
-              </button>
-            </li>
-          ))}
-        </ul>
       )}
-
-      <br />
-      <Link to="/">
-        <button className="btn btn-primary">Volver al Home</button>
-      </Link>
     </div>
   );
 };
+
+export default Demo;
