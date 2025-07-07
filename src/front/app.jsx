@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import LoginForm from "./LoginForm"; // Asegúrate de que la ruta sea correcta
 
+
 const mockUserId = 1; // Simulamos un usuario logueado
 const API = (import.meta.env.VITE_BACKEND_URL || "http://localhost:3001") + "/api";
 

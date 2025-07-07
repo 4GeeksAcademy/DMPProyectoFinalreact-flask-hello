@@ -122,17 +122,18 @@ def get_favorites():
     return jsonify([item.serialize() for item in items]), 200
 
 
-@api.route("/favorites/<int:id>", methods=["DELETE"])
+@api.route("/favorites/<int:item_id>", methods=["DELETE"])
 @jwt_required()
-def delete_favorite(id):
+def delete_favorite(item_id):
     user_id = get_jwt_identity()
-    fav = Favorite.query.get(id)
-    if not fav or fav.user_id != user_id:
+    fav = Favorite.query.get(item_id)
+    if not fav or fav.user_id != int(user_id):
         return jsonify({"error": "No autorizado o favorito no encontrado"}), 404
 
     db.session.delete(fav)
     db.session.commit()
     return jsonify({"msg": "Eliminado"}), 200
+
 
 
 # ------------------ TEST ------------------
@@ -160,14 +161,13 @@ def delete_user():
 
     return jsonify({"message": "Usuario eliminado correctamente"}), 200
 
+
 @api.route("/create-checkout-session", methods=["POST"])
 @jwt_required()
 def create_checkout_session():
     user_id = get_jwt_identity()
-    
-    # Obtén el carrito del usuario desde la DB
-    cart_items = db.session.query(cart_items).filter_by(user_id=user_id).all()
 
+    cart_items = CartItem.query.filter_by(user_id=user_id).all()
     if not cart_items:
         return jsonify({"error": "Carrito vacío"}), 400
 
@@ -179,19 +179,25 @@ def create_checkout_session():
                 'currency': 'eur',
                 'product_data': {
                     'name': product.nombre,
-                    'description': product.descripcion
+                    'description': product.descripcion or "Sin descripción"
                 },
-                'unit_amount': int(product.precio * 100),  # en centavos
+                'unit_amount': int(product.precio * 100),
             },
             'quantity': 1,
         })
 
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=line_items,
-        mode="payment",
-        success_url="http://localhost:5173/success",
-        cancel_url="http://localhost:5173/cart",
-    )
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url="https://tupagina.com/success",
+            cancel_url="https://tupagina.com/cart"
+        )
+        return jsonify({"url": session.url}), 200
+    except Exception as e:
+        print("❌ Error con Stripe:", str(e))
+        return jsonify({"error": "Error al crear la sesión de pago"}), 500
 
-    return jsonify({"url": session.url})
+    
+   

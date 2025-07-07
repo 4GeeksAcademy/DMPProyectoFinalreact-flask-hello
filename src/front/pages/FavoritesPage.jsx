@@ -23,27 +23,23 @@ const FavoritesPage = () => {
   };
 
   const deleteFavorite = async (id) => {
-  const url = `${API}/favorites/${id}`;
-  console.log("Eliminando favorito con ID:", id);
-  console.log("URL completa:", url);
-
-  try {
-    const res = await fetch(url, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`
+    try {
+      const res = await fetch(`${API}/favorites/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        loadFavorites(); // recarga favoritos tras eliminar
+      } else {
+        const err = await res.json();
+        alert(err.error || "Error al eliminar de favoritos");
       }
-    });
-    if (res.ok) {
-      loadFavorites();
-    } else {
-      const err = await res.json();
-      alert(err.error || "Error al eliminar de favoritos");
+    } catch (err) {
+      console.error("Error al eliminar de favoritos:", err);
     }
-  } catch (err) {
-    console.error("Error al eliminar de favoritos:", err);
-  }
-};
+  };
 
   useEffect(() => {
     if (token) loadFavorites();
@@ -71,7 +67,9 @@ const FavoritesPage = () => {
                   />
                   <div className="card-body">
                     <h5 className="card-title">{p.nombre}</h5>
-                    <h6 className="card-subtitle text-muted mb-2">{p.grupo} ({p.anio})</h6>
+                    <h6 className="card-subtitle text-muted mb-2">
+                      {p.grupo} ({p.anio})
+                    </h6>
                     <p className="card-text">
                       <strong>Formato:</strong> {p.soporte}<br />
                       <strong>💶 Precio:</strong> {p.precio} €<br />
@@ -80,7 +78,10 @@ const FavoritesPage = () => {
                     </p>
                   </div>
                   <div className="card-footer text-end">
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => deleteFavorite(item.id)}>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => deleteFavorite(item.id)}
+                    >
                       🗑️ Eliminar
                     </button>
                   </div>

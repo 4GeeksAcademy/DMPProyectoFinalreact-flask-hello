@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(120), nullable=False)
@@ -30,7 +31,8 @@ class Product(db.Model):
     anio = db.Column(db.Integer, nullable=False)
     soporte = db.Column(db.String(20), nullable=False)
     precio = db.Column(db.Float, nullable=False)
-    imagen_url = db.Column(db.String, default="https://via.placeholder.com/300")
+    imagen_url = db.Column(
+        db.String, default="https://via.placeholder.com/300")
     descripcion = db.Column(db.Text, default="")  # NUEVO CAMPO
 
     def serialize(self):
@@ -49,7 +51,8 @@ class Product(db.Model):
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey(
+        "product.id"), nullable=False)
 
     user = db.relationship("User", backref="cart_items")
     product = db.relationship("Product")
@@ -65,7 +68,8 @@ class CartItem(db.Model):
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey(
+        "product.id"), nullable=False)
 
     user = db.relationship("User", backref="favorites")
     product = db.relationship("Product")

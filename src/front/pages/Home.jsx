@@ -129,7 +129,7 @@ export const Home = () => {
   return (
     <div className="container py-4" style={{ backgroundColor: "#f8f0ff" }}>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="text-purple" onClick={() => navigate("/home")}>🎵 Ferretería Musical</h2>
+        <h2 className="text-purple" onClick={() => navigate("/home")}>🎵 Rythm & Blues</h2>
         {token ? (
           <div>
             <button className="btn btn-primary btn-sm me-2" onClick={() => navigate("/favorites")}>Favoritos</button>

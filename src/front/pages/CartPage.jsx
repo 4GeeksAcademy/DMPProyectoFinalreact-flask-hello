@@ -50,16 +50,14 @@ const handlePayment = async () => {
     const res = await fetch(`${API}/create-checkout-session`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ items: cart }) // asegúrate que `cart` tiene la estructura esperada
+      }
     });
 
     if (!res.ok) throw new Error("Error en la solicitud");
 
     const data = await res.json();
-    window.location.href = data.url;  // redirige al checkout de Stripe
+     window.open(data.url, "_blank"); // Redirige al checkout de Stripe
   } catch (err) {
     console.error("Error iniciando pago:", err);
     alert("No se pudo iniciar el proceso de pago");

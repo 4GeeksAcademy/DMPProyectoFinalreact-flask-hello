@@ -1,14 +1,13 @@
-import os
-import stripe
-
-from flask import Flask, jsonify
-from flask_migrate import Migrate
-from flask_cors import CORS
-from api.models import db, Product
-from api.routes import api as api_blueprint
 from flask_jwt_extended import JWTManager
-
-
+from api.routes import api as api_blueprint
+from api.models import db, Product
+from flask_cors import CORS
+from flask_migrate import Migrate
+from flask import Flask, jsonify
+import stripe
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 
 app = Flask(__name__)
@@ -17,10 +16,12 @@ CORS(app)
 
 # Configuración de base de datos
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "../database.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + \
+    os.path.join(basedir, "../database.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-app.config["JWT_SECRET_KEY"] = "clave-secreta-supersegura"  # Usa una clave más segura en producción
+# Usa una clave más segura en producción
+app.config["JWT_SECRET_KEY"] = "clave-secreta-supersegura"
 jwt = JWTManager(app)
 
 # Inicializa SQLAlchemy y migraciones
@@ -28,18 +29,19 @@ db.init_app(app)
 MIGRATE = Migrate(app, db)
 
 
+print("🔐 Stripe Key cargada:", os.getenv("STRIPE_SECRET_KEY"))
 
-stripe.api_key = "TU_CLAVE_SECRETA_DE_STRIPE"  # comienza con "sk_test_..."
-
-
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 
 # Registra el blueprint
 app.register_blueprint(api_blueprint, url_prefix="/api")
 
+
 @app.route("/")
 def index():
     return jsonify({"message": "API funcionando correctamente"}), 200
+
 
 def precargar_productos():
     if Product.query.count() == 0:
@@ -79,6 +81,7 @@ def precargar_productos():
         db.session.commit()
         print("🎉 Productos demo añadidos")
 
+
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 3001))
     with app.app_context():
@@ -86,4 +89,3 @@ if __name__ == "__main__":
         db.create_all()
         precargar_productos()
     app.run(host="0.0.0.0", port=PORT, debug=True)
-

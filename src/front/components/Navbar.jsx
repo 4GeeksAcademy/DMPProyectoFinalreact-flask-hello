@@ -48,7 +48,7 @@ const Navbar = () => {
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4">
-        <span className="navbar-brand">🎶 Mi Tienda de Música</span>
+        <span className="navbar-brand">🎶 Rythm & Blues</span>
         <div className="ms-auto d-flex align-items-center">
           {!store.token ? (
             <>
